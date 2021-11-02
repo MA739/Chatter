@@ -44,9 +44,9 @@ class FirebaseService {
   }
 
   //method for returning current user's name
-  /*Future<String?> getUsername() async {
-    return auth.currentUser.name;
-  }*/
+  Future<String?> getUsername() async {
+    return auth.currentUser!.displayName;
+  }
 
   //method for returning a given collection. Needed for adding new users to the db
   CollectionReference getCollection(String collectionName) {
