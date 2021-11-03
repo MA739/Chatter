@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:mdchatapp/new_message_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 //import 'convo_widget.dart';
@@ -26,17 +27,26 @@ class _ConversationViewState extends State<ConversationView> {
   @override
   Widget build(BuildContext context) {
     final fauth.User? user = service.auth.currentUser;
-    //returns user's name for top of screen
 
-    String provideName() {
-      String name = "User";
+    List<String> convoIDList = [];
+    //returns user's name for top of screen
+    String name = "User";
+    void setName() {
       service.getName(user).then((String result) {
         setState(() {
           name = result;
         });
       });
+    }
+
+    //sets name variable to current user's name
+    setName();
+
+    String provideName() {
       return name;
     }
+
+    //getConvoIDList(convoIDList);
 
     return Scaffold(
         appBar: AppBar(
@@ -44,9 +54,9 @@ class _ConversationViewState extends State<ConversationView> {
           title: Row(children: <Widget>[
             Text(/*"Username"*/ provideName(),
                 style: const TextStyle(fontSize: 18)),
-            /*IconButton(
+            IconButton(
                 onPressed: () => createNewConvo(context),
-                icon: const Icon(Icons.add, size: 30)),*/
+                icon: const Icon(Icons.add, size: 30)),
           ]),
           actions: <Widget>[
             TextButton(
@@ -83,14 +93,31 @@ class _ConversationViewState extends State<ConversationView> {
                   .getCollection('conversations')
                   .snapshots(), //get relevant collections/subcollection
               //if ConvoID == userID_peerID, add it to the Stream. Logic is in other code,
+
               builder: (BuildContext context,
                   AsyncSnapshot<QuerySnapshot> snapshot) {
-                /*if (snapshot.hasData) {
+                if (snapshot.hasData) {
                   // <3> Retrieve `List<DocumentSnapshot>` from snapshot
                   final List<DocumentSnapshot> documents = snapshot.data!.docs;
+
+                  getConvoIDList(convoIDList, documents);
+                  //populateList(documents);
                   return ListView(
                       //need to access subcollections
-                      children: documents
+
+                      children: getList(convoIDList, user,
+                          documents)); /*[
+                        for (String id in convoIDList)
+                        {
+                          if id.contains(user.id){
+                            var doc = documents(id).get()
+                            Card(child: ListTile( 
+                              title: Text(doc['MessageContent']))
+                            )//.toList();
+                          }
+                        }
+                        ]*/
+                  /*documents
                           .map((doc) => Card(
                                 child: ListTile(
                                     title: Text(doc['MessageContent']),
@@ -99,10 +126,11 @@ class _ConversationViewState extends State<ConversationView> {
                                         .toDate()
                                         .toString()))),
                                 //replace with preview of lastMessage. For placeholder, just show text
-                              ))
-                          .toList());
-                } else {*/
-                return const Text("Start a conversation with someone");
+                              ))*/
+                  //.toList());
+                } else {
+                  return const Text("Start a conversation with someone");
+                }
                 //}
               }),
         )));
@@ -111,10 +139,69 @@ class _ConversationViewState extends State<ConversationView> {
   //if there's no conversations to load, display  "Create a conversation with someone"
   //else display current conversations
 
-  /*void createNewConvo(BuildContext context) {
+  /*iterates through list of conversation ids, checking if any of them contain the currrent
+  user's ID. If it does, it searches through the DocSnapshot for that specific document and creates
+  a Card with that Conversation's receiver as the title*/
+  List<Widget> getList(
+      List<String> cIDList, fauth.User? user, List<DocumentSnapshot> docs) {
+    List<Widget> openConvos = [];
+    for (String id in cIDList) {
+      //compare if a conversation's id includes the current User. If so, create a card containing it's data for viewing
+      if (id.contains(user!.uid)) {
+        for (int i = 0; i < docs.length; i++) {
+          var checkDoc = docs[i];
+          if (checkDoc.id == id) {
+            openConvos
+                .add(Card(child: ListTile(title: Text(checkDoc['contact']))));
+          }
+        }
+
+        //var docRef = service.getCollection('conversations').doc(id).get();
+
+      }
+    }
+    return openConvos;
+  }
+
+  ListView populateList(List<DocumentSnapshot> convolist) {
+    return ListView(
+        children: convolist
+            .map((doc) => Card(
+                  child: ListTile(
+                      title: Text(doc['MessageContent']),
+                      //replace with peerName
+                      subtitle:
+                          Text((doc['Date Time Posted'].toDate().toString()))),
+                  //replace with preview of lastMessage. For placeholder, just show text
+                ))
+            .toList());
+  }
+
+  String getConvoID(String userID, String peerID) {
+    return userID.hashCode <= peerID.hashCode
+        ? userID + '_' + peerID
+        : peerID + '_' + userID;
+  }
+
+  Future<void> getConvoIDList(
+      List<String> list, List<DocumentSnapshot> result) async {
+    //List<String> cIDList = [];
+    //QuerySnapshot result = await service.getCollection('conversations').get();
+    //final List<DocumentSnapshot> documents = result.docs;
+    List<String> docIDs = [];
+    for (var doc in result) {
+      list.add(doc.id);
+    }
+    /*for (String a in list) {
+      print("CONVOID" + a);
+    }*/
+    //return cIDList;
+  }
+
+  void createNewConvo(BuildContext context) {
     Navigator.of(context).push<dynamic>(MaterialPageRoute<dynamic>(
-        builder: (BuildContext context) => NewMessageProvider()));
-  }*/
+        builder: (BuildContext context) => NewMessageScreen()));
+  }
 
   Map<String, u.User> getUserMap(List<u.User> users) {
     final Map<String, u.User> userMap = {};

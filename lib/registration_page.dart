@@ -75,6 +75,9 @@ class RegistrationForm extends StatelessWidget {
       print('DATE' + DateTime.now().toString());
       var user = await service.getCurrentUser();
       String uid = user!.uid;
+      //if the rank is less than 1, it is considered unrated
+      int initRank = -1;
+      int initVoteCount = 0;
 
       //dateTime object
       var now = DateTime.now();
@@ -90,6 +93,8 @@ class RegistrationForm extends StatelessWidget {
                 regisDate, //insert function to grab time/date, format it, and convert it to string
             'Bio': bio,
             'UID': uid,
+            'ConvoRank': initRank,
+            'VoteCount': initVoteCount
             //'picture': defaultImageURL,
             //'Password': Pass
           })

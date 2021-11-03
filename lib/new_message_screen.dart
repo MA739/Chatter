@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fauth;
 import 'new_convo_screen.dart';
 import 'user.dart' as ud;
@@ -10,8 +11,24 @@ FirebaseService service = FirebaseService();
 class NewMessageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final fauth.User user = Provider.of<fauth.User>(context);
-    final List<ud.User> userDirectory = Provider.of<List<ud.User>>(context);
+    final fauth.User? user = service.auth.currentUser;
+    //need to get collection from user directory... minus the current user
+    final List<ud.User> userDirectory = [];
+    var users;
+    //method to fetch users from firestore
+    //get snapshot of the collection. Then convert to map so I can iterate and get specific subdata
+    void getUserList() {
+      users = service
+          .getCollection('users')
+          .get()
+          .then((QuerySnapshot querySnapshot) {
+        //for each user, add their name to a list...
+        for (ud.User s in users) {
+          userDirectory.add(s);
+        }
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text('Select Contact')),
       body: userDirectory != null
@@ -21,7 +38,7 @@ class NewMessageScreen extends StatelessWidget {
     );
   }
 
-  List<Widget> getListViewItems(List<ud.User> userDirectory, fauth.User user) {
+  List<Widget> getListViewItems(List<ud.User> userDirectory, fauth.User? user) {
     final List<Widget> list = <Widget>[];
     for (ud.User contact in userDirectory) {
       if (contact.id != service.getUserID().toString()) {
