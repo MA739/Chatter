@@ -29,16 +29,6 @@ class NewMessageScreenState extends State<NewMessageScreen> {
     late Stream<QuerySnapshot> users;
     users = service.getCollection('users').snapshots();
 
-    /*Future<void> geUserList(
-      List<String> list, List<DocumentSnapshot> result) async {
-    //List<String> cIDList = [];
-    //QuerySnapshot result = await service.getCollection('conversations').get();
-    //final List<DocumentSnapshot> documents = result.docs;
-    //List<String> docIDs = [];
-    for (var doc in result) {
-      list.add(doc.id);
-    }*/
-
     //method to fetch users from firestore
     //get snapshot of the collection. Then convert to map so I can iterate and get specific subdata
     /*void getUserList() {
@@ -109,6 +99,11 @@ class NewMessageScreenState extends State<NewMessageScreen> {
     //add userIDS from map to userIDList
     for (var key in userMap.keys) {
       userIDList.add(key);
+      //expected keys: DU, | HH64, | GT,
+      //vals should be their respective userIDs
+      /*print("userMap Key: " + key);
+      String val = userMap[key] as String;
+      print("Usermap Val: " + val);*/
     }
 
     /*for (var value in userMap.values)
@@ -117,13 +112,15 @@ class NewMessageScreenState extends State<NewMessageScreen> {
     }*/
 
     //populates list with usernames of contacts. For map, must ensure that current user's ID is not included
-    for (String contact in userIDList) {
-      if (contact != service.getUserID().toString()) {
+    for (String contactName in userIDList) {
+      if (contactName != service.getUserID().toString()) {
         //need to iterate through userMap and get the correct key/username by comparison
+        //gets corresponding userid from map and casts it as a string
+        String cID = userMap[contactName] as String;
         list.add(UserRow(
-            uid: service.getUserID().toString(),
-            contactName: contact,
-            contactID: userMap['contact'] as String));
+            currentUseruid: service.auth.currentUser!.uid,
+            contactName: contactName,
+            contactID: cID));
         list.add(Divider(thickness: 1.0));
       }
     }
@@ -133,8 +130,10 @@ class NewMessageScreenState extends State<NewMessageScreen> {
 
 class UserRow extends StatelessWidget {
   const UserRow(
-      {required this.uid, required this.contactName, required this.contactID});
-  final String uid;
+      {required this.currentUseruid,
+      required this.contactName,
+      required this.contactID});
+  final String currentUseruid;
   final String contactName;
   final String contactID;
 
@@ -154,11 +153,11 @@ class UserRow extends StatelessWidget {
 
   void createConversation(
       BuildContext context, String contactID, String contactName) {
-    String convoID = getConvoID(uid, contactID);
+    String convoID = getConvoID(currentUseruid, contactID);
 
     Navigator.of(context).pushReplacement(MaterialPageRoute(
         builder: (BuildContext context) => NewConversationScreen(
-            uid: uid,
+            uid: currentUseruid,
             contactName: contactName,
             contactID: contactID,
             convoID: convoID)));
