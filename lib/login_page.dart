@@ -17,7 +17,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   var UController = TextEditingController();
   var PController = TextEditingController();
-
+  Route route = MaterialPageRoute(builder: (context) => ConversationView());
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
@@ -26,25 +26,11 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void loginAndLoad(fauth.User? user) async {
-    service.emailSignInWithPassword(UController.text, PController.text);
-
-    // ignore: unnecessary_null_comparison
-    if (user != null) {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  ConversationView() //ConversationProvider(user: user)
-              ));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     //final fauth.User user = Provider.of<fauth.User>(context, listen: false);
     //final fauth.User user = Provider.of<fauth.User>(context);
-    final fauth.User? user = service.auth.currentUser;
+    //fauth.User? user = service.auth.currentUser;
     //final User firebaseUser = Provider.of<User>(context);
     //fauth.User? currentUser;
 
@@ -99,29 +85,17 @@ class _LoginPageState extends State<LoginPage> {
                   }
                 else
                   {
-                    loginAndLoad(user)
-                    //DO SOMETHING HERE
-                    /*service.emailSignInWithPassword(
-                        UController.text, PController.text),
-
-                    // ignore: unnecessary_null_comparison
-                    if (user != null)
-                      {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ConversationView()
-                                //ConversationProvider(user: user)))
-                                ))*/
-
-                    /*if (service.getCurrentUser() != null)
-                      {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const ConversationView())),
-                      }*/
+                    service.emailSignInWithPassword(
+                        UController.text, PController.text, context),
+                    //sometimes need to press login twice
+                    if (service.auth.currentUser != null)
+                      {Navigator.pushReplacement(context, route)}
+                    /*{
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ConversationView()))
+                    }*/
                   }
               },
               child: const Text('Login'),

@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:async/async.dart';
 import 'convo.dart';
 import 'user.dart' as ud;
+//import 'home_builder.dart';
 
 //base authentication class for future projects
 
@@ -87,16 +89,34 @@ class FirebaseService {
     return userCredential;
   }
 
-  Future<void> emailSignInWithPassword(String email, String password) async {
+  Future<void> emailSignInWithPassword(
+      String email, String password, BuildContext context) async {
     try {
       await auth.signInWithEmailAndPassword(email: email, password: password);
+      /*Navigator.push(
+          context, MaterialPageRoute(builder: (context) => ConversationView()));*/
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print('No user found for that email.');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("The password provided is too weak.")));
       } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Wrong password provided for that user.")));
       }
     }
+    /*
+    try {
+      UserCredential userCredential = await auth.signInWithEmailAndPassword(
+          email: email, password: password);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("The password provided is too weak.")));
+      } else if (e.code == 'wrong-password') {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Wrong password provided for that user.")));
+      }
+    }*/
   }
 
   //email verification

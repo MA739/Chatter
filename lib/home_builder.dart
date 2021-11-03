@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:mdchatapp/login_page.dart';
 import 'package:mdchatapp/new_message_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,6 +24,14 @@ class _ConversationViewState extends State<ConversationView> {
   //<ConversationView> {
   //String userName = "fillerName";
   //update userName value before widget is built
+  //navigate back to login page
+  Route route = MaterialPageRoute(builder: (context) => LoginPage());
+  late Stream<QuerySnapshot> fireStream;
+  @override
+  void initState() {
+    super.initState();
+    fireStream = service.getCollection('conversations').snapshots();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +54,6 @@ class _ConversationViewState extends State<ConversationView> {
     String provideName() {
       return name;
     }
-
-    //getConvoIDList(convoIDList);
 
     return Scaffold(
         appBar: AppBar(
@@ -73,8 +80,7 @@ class _ConversationViewState extends State<ConversationView> {
                         //This is where it would navigate to the actual app's content
                         onPressed: () => {
                           service.auth.signOut(),
-                          Navigator.of(context)
-                              .popUntil((route) => route.isFirst)
+                          Navigator.pushReplacement(context, route)
                         },
                         child: const Text('OK'),
                       ),
@@ -89,55 +95,28 @@ class _ConversationViewState extends State<ConversationView> {
         body: SafeArea(
             child: Center(
           child: StreamBuilder(
-              stream: service
-                  .getCollection('conversations')
-                  .snapshots(), //get relevant collections/subcollection
-              //if ConvoID == userID_peerID, add it to the Stream. Logic is in other code,
+              stream: fireStream, //get relevant collections/subcollection
+              //if ConvoID contains userID, add it to the Stream. Logic is in other code,
 
               builder: (BuildContext context,
                   AsyncSnapshot<QuerySnapshot> snapshot) {
+                /*if there's no conversations to load, display  "Create a conversation with someone"
+                else display current conversations*/
                 if (snapshot.hasData) {
                   // <3> Retrieve `List<DocumentSnapshot>` from snapshot
                   final List<DocumentSnapshot> documents = snapshot.data!.docs;
 
                   getConvoIDList(convoIDList, documents);
-                  //populateList(documents);
                   return ListView(
                       //need to access subcollections
 
-                      children: getList(convoIDList, user,
-                          documents)); /*[
-                        for (String id in convoIDList)
-                        {
-                          if id.contains(user.id){
-                            var doc = documents(id).get()
-                            Card(child: ListTile( 
-                              title: Text(doc['MessageContent']))
-                            )//.toList();
-                          }
-                        }
-                        ]*/
-                  /*documents
-                          .map((doc) => Card(
-                                child: ListTile(
-                                    title: Text(doc['MessageContent']),
-                                    //replace with peerName
-                                    subtitle: Text((doc['Date Time Posted']
-                                        .toDate()
-                                        .toString()))),
-                                //replace with preview of lastMessage. For placeholder, just show text
-                              ))*/
-                  //.toList());
+                      children: getList(convoIDList, user, documents));
                 } else {
                   return const Text("Start a conversation with someone");
                 }
-                //}
               }),
         )));
   }
-
-  //if there's no conversations to load, display  "Create a conversation with someone"
-  //else display current conversations
 
   /*iterates through list of conversation ids, checking if any of them contain the currrent
   user's ID. If it does, it searches through the DocSnapshot for that specific document and creates
@@ -163,20 +142,6 @@ class _ConversationViewState extends State<ConversationView> {
     return openConvos;
   }
 
-  ListView populateList(List<DocumentSnapshot> convolist) {
-    return ListView(
-        children: convolist
-            .map((doc) => Card(
-                  child: ListTile(
-                      title: Text(doc['MessageContent']),
-                      //replace with peerName
-                      subtitle:
-                          Text((doc['Date Time Posted'].toDate().toString()))),
-                  //replace with preview of lastMessage. For placeholder, just show text
-                ))
-            .toList());
-  }
-
   String getConvoID(String userID, String peerID) {
     return userID.hashCode <= peerID.hashCode
         ? userID + '_' + peerID
@@ -188,7 +153,7 @@ class _ConversationViewState extends State<ConversationView> {
     //List<String> cIDList = [];
     //QuerySnapshot result = await service.getCollection('conversations').get();
     //final List<DocumentSnapshot> documents = result.docs;
-    List<String> docIDs = [];
+    //List<String> docIDs = [];
     for (var doc in result) {
       list.add(doc.id);
     }
@@ -198,6 +163,8 @@ class _ConversationViewState extends State<ConversationView> {
     //return cIDList;
   }
 
+  //creates the screen that lists the users and
+  //allows search functionality for initiating conversations
   void createNewConvo(BuildContext context) {
     Navigator.of(context).push<dynamic>(MaterialPageRoute<dynamic>(
         builder: (BuildContext context) => NewMessageScreen()));

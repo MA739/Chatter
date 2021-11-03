@@ -9,9 +9,13 @@ FirebaseService service = FirebaseService();
 
 class NewConversationScreen extends StatelessWidget {
   const NewConversationScreen(
-      {required this.uid, required this.contact, required this.convoID});
+      {required this.uid,
+      required this.contactName,
+      required this.contactID,
+      required this.convoID});
   final String uid, convoID;
-  final ud.User contact;
+  final String contactName;
+  final String contactID;
   //final User contact;
 
   @override
@@ -19,24 +23,24 @@ class NewConversationScreen extends StatelessWidget {
     return Scaffold(
         appBar:
             //need to write method to grab username based on uid. [search db for entry that matches uid. Then return name.]
-            AppBar(automaticallyImplyLeading: true, title: Text(contact.name)),
-        body: ChatScreen(uid: uid, convoID: convoID, contact: contact));
+            AppBar(automaticallyImplyLeading: true, title: Text(contactName)),
+        body: ChatScreen(uid: uid, convoID: convoID, contactID: contactID));
   }
 }
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen(
-      {required this.uid, required this.convoID, required this.contact});
+      {required this.uid, required this.convoID, required this.contactID});
   final String uid, convoID;
-  final ud.User contact;
+  final String contactID;
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  late String uid, convoID;
-  late ud.User contact;
+  late String uid, convoID, contactID;
+  //late ud.User contact;
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroller = ScrollController();
 
@@ -45,7 +49,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     uid = widget.uid;
     convoID = widget.convoID;
-    contact = widget.contact;
+    contactID = widget.contactID;
   }
 
   @override
@@ -182,7 +186,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (content.trim() != '') {
       _controller.clear();
       content = content.trim();
-      service.sendMessage(convoID, uid, contact.id, content,
+      service.sendMessage(convoID, uid, contactID, content,
           DateTime.now().millisecondsSinceEpoch.toString());
       _scroller.animateTo(0.0,
           duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
