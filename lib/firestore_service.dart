@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:async/async.dart';
-import 'convo.dart';
+//import 'convo.dart';
 import 'user.dart' as ud;
 //import 'home_builder.dart';
 
@@ -35,13 +35,16 @@ class FirebaseService {
   }
 
   //gets name of any registered user
-  Future<String> getName(User? user) async {
-    String uid = user!.uid; //.toString();
-    QuerySnapshot<Map<String, dynamic>> snapshot =
-        await _firestore.collection('users').where('UID', isEqualTo: uid).get();
+  Future<String> getName(String userID) async {
+    //String uid = user!.uid; //.toString();
+    QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
+        .collection('users')
+        .where('UID', isEqualTo: userID)
+        .get();
     List<QueryDocumentSnapshot> docs = snapshot.docs;
     //should only be one doc associated with each user's ID, so it is equal to checking a single item
     var checkDoc = docs[0].data() as Map<String, dynamic>;
+
     return checkDoc['Username'];
   }
 
@@ -104,19 +107,6 @@ class FirebaseService {
             content: Text("Wrong password provided for that user.")));
       }
     }
-    /*
-    try {
-      UserCredential userCredential = await auth.signInWithEmailAndPassword(
-          email: email, password: password);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("The password provided is too weak.")));
-      } else if (e.code == 'wrong-password') {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Wrong password provided for that user.")));
-      }
-    }*/
   }
 
   //email verification
@@ -238,7 +228,7 @@ class FirebaseService {
       //service._firestore.runTransaction((Transaction transaction) async {
       //await transaction.set(
       //messageDoc,
-      messageDoc.update(<String, dynamic>{
+      messageDoc.set(<String, dynamic>{
         'idFrom': id,
         'idTo': pid,
         'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),

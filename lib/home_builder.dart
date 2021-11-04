@@ -4,7 +4,7 @@ import 'package:mdchatapp/login_page.dart';
 import 'package:mdchatapp/new_message_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-//import 'convo_widget.dart';
+import 'convo_widget.dart';
 import 'firestore_service.dart';
 //import 'message_provider.dart';
 import 'convo.dart';
@@ -25,12 +25,17 @@ class _ConversationViewState extends State<ConversationView> {
   //String userName = "fillerName";
   //update userName value before widget is built
   //navigate back to login page
+  //holds one peername at a time. Guaranteed String return, although janky
+  List<String> uNameList = [""];
+  //list for displaying openConversations
+  List<Widget> openConvos = [];
+  //return to loginpage
   Route route = MaterialPageRoute(builder: (context) => LoginPage());
-  late Stream<QuerySnapshot> fireStream;
+  //late Stream<QuerySnapshot> fireStream;
   @override
   void initState() {
     super.initState();
-    fireStream = service.getCollection('conversations').snapshots();
+    //fireStream = service.getCollection('conversations').snapshots();
   }
 
   @override
@@ -39,28 +44,14 @@ class _ConversationViewState extends State<ConversationView> {
 
     List<String> convoIDList = [];
     //returns user's name for top of screen
-    String name = "User";
-    void setName() {
-      service.getName(user).then((String result) {
-        setState(() {
-          name = result;
-        });
-      });
-    }
 
     //sets name variable to current user's name
-    setName();
-
-    String provideName() {
-      return name;
-    }
-
+    //clear list, so it can rebuild. Not efficient, but ok for  small project. Ask Dr. Umoja how this would usually be handled
     return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
           title: Row(children: <Widget>[
-            Text(/*"Username"*/ provideName(),
-                style: const TextStyle(fontSize: 18)),
+            Text("Best Chat App", style: const TextStyle(fontSize: 18)),
             IconButton(
                 onPressed: () => createNewConvo(context),
                 icon: const Icon(Icons.add, size: 30)),
@@ -95,7 +86,10 @@ class _ConversationViewState extends State<ConversationView> {
         body: SafeArea(
             child: Center(
           child: StreamBuilder(
-              stream: fireStream, //get relevant collections/subcollection
+              stream: service
+                  .getCollection('conversations')
+                  .snapshots() //fireStream
+                  .distinct(), //get relevant collections/subcollection
               //if ConvoID contains userID, add it to the Stream. Logic is in other code,
 
               builder: (BuildContext context,
@@ -103,9 +97,8 @@ class _ConversationViewState extends State<ConversationView> {
                 /*if there's no conversations to load, display  "Create a conversation with someone"
                 else display current conversations*/
                 if (snapshot.hasData) {
-                  // <3> Retrieve `List<DocumentSnapshot>` from snapshot
+                  //Snapshot.docs for fireStream, which holds Conversation Info
                   final List<DocumentSnapshot> documents = snapshot.data!.docs;
-
                   getConvoIDList(convoIDList, documents);
                   return ListView(
                       //need to access subcollections
@@ -121,32 +114,110 @@ class _ConversationViewState extends State<ConversationView> {
   /*iterates through list of conversation ids, checking if any of them contain the currrent
   user's ID. If it does, it searches through the DocSnapshot for that specific document and creates
   a Card with that Conversation's receiver as the title*/
+
   List<Widget> getList(
-      List<String> cIDList, fauth.User? user, List<DocumentSnapshot> docs) {
-    List<Widget> openConvos = [];
-    for (String id in cIDList) {
-      //compare if a conversation's id includes the current User. If so, create a card containing it's data for viewing
-      if (id.contains(user!.uid)) {
+      List<String> convoIDList, fauth.User? user, List<DocumentSnapshot> docs) {
+    //List<Widget> openConvos = [];
+    //openConvos.clear();
+    for (String convoId in convoIDList) {
+      //compare if a conversation's document id includes the current User.
+      //If so, create a card containing it's data for viewing
+      if (convoId.contains(user!.uid)) {
         for (int i = 0; i < docs.length; i++) {
+          //iterate through the conversation id document to find the correct one.
           var checkDoc = docs[i];
-          if (checkDoc.id == id) {
-            openConvos
-                .add(Card(child: ListTile(title: Text(checkDoc['contact']))));
+          //print("Document ID: " + checkDoc.id);
+          if (checkDoc.id == convoId) {
+            //String peerName = "";
+            //checks the peerID and currentuserID's stored in the Conversation 'users' field
+            //If the users[0] id matches currentUID, add Users[1]. Else add Users[0].
+            if (checkDoc['users'][0] == user.uid) {
+              var temp = ConvoListItem(
+                  userID: user.uid,
+                  peerID: checkDoc['users'][1],
+                  //need to pass name into this function...
+                  //placeholder value
+                  peerName: "peer 1",
+                  lastMessage: checkDoc['lastMessage']);
+              //checks if the conversation is already in the list before adding
+              if (!openConvos.contains(temp)) {
+                openConvos.add(temp);
+              }
+              //adds to list haphazardly
+              /*openConvos.add(ConvoListItem(
+                  userID: user.uid,
+                  peerID: checkDoc['users'][1],
+                  //need to pass name into this function...
+                  //placeholder value
+                  peerName: "peer 1",
+                  lastMessage: checkDoc['lastMessage']));*/
+            } else if (checkDoc['users'][1] == user.uid) {
+              var temp = ConvoListItem(
+                  userID: user.uid,
+                  peerID: checkDoc['users'][0],
+                  //need to pass name into this function...
+                  //placeholder value
+                  peerName: "peer 2",
+                  lastMessage: checkDoc['lastMessage']);
+              if (!openConvos.contains(temp)) {
+                openConvos.add(temp);
+              }
+
+              /*openConvos.add(ConvoListItem(
+                  userID: user.uid,
+                  peerID: checkDoc['users'][0],
+                  //need to pass name into this function...
+                  //placeholder value
+                  peerName: "Peer 2",
+                  lastMessage: checkDoc['lastMessage']));*/
+            }
           }
         }
-
-        //var docRef = service.getCollection('conversations').doc(id).get();
-
       }
     }
     return openConvos;
   }
+
+  //untouched... WORKS if other is deleted
+  /*List<Widget> getList(
+      List<String> convoIDList, fauth.User? user, List<DocumentSnapshot> docs) {
+    List<Widget> openConvos = [];
+    for (String convoId in convoIDList) {
+      //compare if a conversation's document id includes the current User.
+      //If so, create a card containing it's data for viewing
+      if (convoId.contains(user!.uid)) {
+        for (int i = 0; i < docs.length; i++) {
+          //iterate through the conversation id document to find the correct one.
+          var checkDoc = docs[i];
+          //print("Document ID: " + checkDoc.id);
+          if (checkDoc.id == convoId) {
+            //String peerName = "";
+            //checks the peerID and currentuserID's stored in the Conversation 'users' field
+            //If the users[0] id matches currentUID, add Users[1]. Else add Users[0].
+            if (checkDoc['users'][0] == user.uid) {
+              openConvos.add(
+                  Card(child: ListTile(title: Text(checkDoc['users'][0]))));
+            } else {
+              openConvos.add(
+                  Card(child: ListTile(title: Text(checkDoc['users'][1]))));
+            }
+          }
+        }
+      }
+    }
+    return openConvos;
+  }*/
 
   String getConvoID(String userID, String peerID) {
     return userID.hashCode <= peerID.hashCode
         ? userID + '_' + peerID
         : peerID + '_' + userID;
   }
+
+  /*Future<String> obtainNameWithID(String id) async {
+    String pName = await service.getName(id);
+    return pName;
+  }*/
 
   Future<void> getConvoIDList(
       List<String> list, List<DocumentSnapshot> result) async {
@@ -176,6 +247,20 @@ class _ConversationViewState extends State<ConversationView> {
       userMap[a.id] = a;
     }
     return userMap;
+  }
+
+  //List<String> uNameList = [""];
+  Future<void> allocateName(String userID) async {
+    QuerySnapshot result = await service.getCollection('users').get();
+    final List<DocumentSnapshot> documents = result.docs;
+    //List<String> docIDs = [];
+    for (var doc in documents) {
+      if (doc.id == userID) {
+        uNameList[0] = doc['Username'];
+        //creates entry username, id
+        //list.add(doc['UID']);
+      }
+    }
   }
 
   //List<String> getUserIds(List<Convo> _convos, fauth.User user) {

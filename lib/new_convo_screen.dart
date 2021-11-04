@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mdchatapp/home_builder.dart';
 import 'firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fauth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:bubble/bubble.dart';
-import 'user.dart' as ud;
+//import 'user.dart' as ud;
 
 FirebaseService service = FirebaseService();
 
 class NewConversationScreen extends StatelessWidget {
-  const NewConversationScreen(
+  NewConversationScreen(
       {required this.uid,
       required this.contactName,
       required this.contactID,
@@ -17,13 +18,23 @@ class NewConversationScreen extends StatelessWidget {
   final String contactName;
   final String contactID;
   //final User contact;
+  final Route homeRoute =
+      MaterialPageRoute(builder: (context) => ConversationView());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar:
             //need to write method to grab username based on uid. [search db for entry that matches uid. Then return name.]
-            AppBar(automaticallyImplyLeading: true, title: Text(contactName)),
+            AppBar(
+                automaticallyImplyLeading: false,
+                title: Row(children: <Widget>[
+                  Text(contactName),
+                  IconButton(
+                      onPressed: () =>
+                          Navigator.pushReplacement(context, homeRoute),
+                      icon: const Icon(Icons.home, size: 30))
+                ])),
         body: ChatScreen(uid: uid, convoID: convoID, contactID: contactID));
   }
 }
@@ -43,13 +54,20 @@ class _ChatScreenState extends State<ChatScreen> {
   //late ud.User contact;
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroller = ScrollController();
-
+  late Stream<QuerySnapshot> convoStream;
   @override
   void initState() {
     super.initState();
     uid = widget.uid;
     convoID = widget.convoID;
     contactID = widget.contactID;
+    /*convoStream = service
+        .getCollection('conversations')
+        .doc(convoID)
+        .collection(convoID)
+        .orderBy('timestamp', descending: true)
+        .limit(20)
+        .snapshots();*/
   }
 
   @override
@@ -77,10 +95,11 @@ class _ChatScreenState extends State<ChatScreen> {
             .collection(convoID)
             .orderBy('timestamp', descending: true)
             .limit(20)
-            .snapshots(),
+            .snapshots()
+            .distinct(),
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.hasData) {
-            var listMessage = snapshot.data!.docs;
+            //var listMessage = snapshot.data!.docs;
             return ListView.builder(
               padding: const EdgeInsets.all(10.0),
               itemBuilder: (BuildContext context, int index) =>
@@ -165,7 +184,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Row(children: <Widget>[
               Container(
                 child: Bubble(
-                    color: Colors.white10,
+                    color: Colors.cyan,
                     elevation: 0,
                     padding: const BubbleEdges.all(10.0),
                     nip: BubbleNip.leftTop,

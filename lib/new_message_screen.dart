@@ -22,45 +22,20 @@ class NewMessageScreenState extends State<NewMessageScreen> {
     //final List<ud.User> userDirectory = [];
     //final List<String> userDirectory = [];
     final Map<String, String> userDirectoryMap = {};
-    //use this after string list is shown to work. Will need to change getUSERIDList method
     //final Map<String, String> userMap = {};
 
     TextEditingController search = TextEditingController();
     late Stream<QuerySnapshot> users;
     users = service.getCollection('users').snapshots();
 
-    //method to fetch users from firestore
-    //get snapshot of the collection. Then convert to map so I can iterate and get specific subdata
-    /*void getUserList() {
-      users = service
-          .getCollection('users')
-          .get;
-      
-      /*  //.then((QuerySnapshot querySnapshot) 
-          {
-        ///for each user, add their name to a list...
-        for (int i = 0; i < querySnapshot.size; i++){
-          var checkDoc = querySnapshot;
-        }
-        
-        for (var s in querySnapshot.docs) {
-          userDirectory.add(s);
-        }
-      });*/
-    }*/
-
     //getUserIDList(userDirectoryList, user);
     getUserIDMap(userDirectoryMap, user);
 
     return Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
+          automaticallyImplyLeading: true,
           title: Row(children: const <Widget>[
             Text("Search Users", style: TextStyle(fontSize: 18)),
-            //need to create way for user to input text
-            /*IconButton(
-                onPressed: () => createNewConvo(context),
-                icon: const Icon(Icons.add, size: 30)),*/
           ]),
           //actions: <Widget>[],
         ),
@@ -94,11 +69,11 @@ class NewMessageScreenState extends State<NewMessageScreen> {
   List<Widget> getListViewItems(Map<String, String> userMap, fauth.User? user) {
     //List<Widget> getListViewItems(List<String> userDirectory, fauth.User? user) {
     final List<Widget> list = <Widget>[];
-    final List<String> userIDList = [];
-    //final List<String> userNameList = [];
-    //add userIDS from map to userIDList
+    //stores names, actually
+    final List<String> userNameList = [];
+    //add userIDS from map to userNameList
     for (var key in userMap.keys) {
-      userIDList.add(key);
+      userNameList.add(key);
       //expected keys: DU, | HH64, | GT,
       //vals should be their respective userIDs
       /*print("userMap Key: " + key);
@@ -112,7 +87,7 @@ class NewMessageScreenState extends State<NewMessageScreen> {
     }*/
 
     //populates list with usernames of contacts. For map, must ensure that current user's ID is not included
-    for (String contactName in userIDList) {
+    for (String contactName in userNameList) {
       if (contactName != service.getUserID().toString()) {
         //need to iterate through userMap and get the correct key/username by comparison
         //gets corresponding userid from map and casts it as a string
