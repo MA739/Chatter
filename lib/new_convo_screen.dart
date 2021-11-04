@@ -4,6 +4,7 @@ import 'firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fauth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:bubble/bubble.dart';
+import 'profile_page.dart';
 //import 'user.dart' as ud;
 
 FirebaseService service = FirebaseService();
@@ -33,7 +34,15 @@ class NewConversationScreen extends StatelessWidget {
                   IconButton(
                       onPressed: () =>
                           Navigator.pushReplacement(context, homeRoute),
-                      icon: const Icon(Icons.home, size: 30))
+                      icon: const Icon(Icons.home, size: 30)),
+                  IconButton(
+                      onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => profilePage(
+                                    userID: contactID,
+                                  ))),
+                      icon: const Icon(Icons.person_pin, size: 30))
                 ])),
         body: ChatScreen(uid: uid, convoID: convoID, contactID: contactID));
   }

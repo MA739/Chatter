@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mdchatapp/login_page.dart';
 import 'package:mdchatapp/new_message_screen.dart';
-import 'package:provider/provider.dart';
+import 'profile_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'convo_widget.dart';
 import 'firestore_service.dart';
@@ -55,6 +55,15 @@ class _ConversationViewState extends State<ConversationView> {
             IconButton(
                 onPressed: () => createNewConvo(context),
                 icon: const Icon(Icons.add, size: 30)),
+            //view user profile
+            IconButton(
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => profilePage(
+                              userID: user!.uid,
+                            ))),
+                icon: const Icon(Icons.person_pin, size: 30)),
           ]),
           actions: <Widget>[
             TextButton(
