@@ -1,16 +1,3 @@
-# bestchatapp
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Chatter
+This is a messaging application built in Flutter. After creating an account, you can initiate conversations with other users. Users can rate each other on the quality of their conversation and view others' ratings.
+The backend database is managed in Firestore. This project started off as a university assignment. My primary goal is to add polish by replacing some filler labels and adding some more functionality.
